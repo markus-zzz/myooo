@@ -135,7 +135,7 @@ class LoadStoreQueue(Elaboratable):
         m.d.sync += [lsqe.data.eq(self.i_broadcast.data), lsqe.data_valid.eq(1)]
 
     lsq_rp = lsq[rp[0:2]]
-    with m.If(~empty & (lsq_rp.status == LSQStatus.ALLOCATED)):
+    with m.If(~empty & ~self.i_flush_en & (lsq_rp.status == LSQStatus.ALLOCATED)):
       addr = lsq_rp.addr + lsq_rp.addr_offset.as_signed()
       with m.If((lsq_rp.type == LSQType.LOAD) & lsq_rp.addr_valid):
         m.d.comb += [u_dcache.i_cpu_addr.eq(addr), u_dcache.i_cpu_valid.eq(1)]
@@ -157,7 +157,7 @@ class LoadStoreQueue(Elaboratable):
       with m.Elif((lsq_rp.type == LSQType.FENCE)):
         m.d.comb += [self.o_broadcast.valid.eq(1), self.o_broadcast.robIdx.eq(lsq_rp.robidx)]
         m.d.sync += [lsq_rp.status.eq(LSQStatus.INVALID), rp.eq(rp + 1)]
-    with m.Elif(~empty & (lsq_rp.status == LSQStatus.COMMITTED)):
+    with m.Elif(~empty & ~self.i_flush_en & (lsq_rp.status == LSQStatus.COMMITTED)):
       addr = lsq_rp.addr + lsq_rp.addr_offset.as_signed()
       with m.Switch(lsq_rp.size):
         with m.Case(LSQSize.BYTE):

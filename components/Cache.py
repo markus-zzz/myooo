@@ -56,12 +56,20 @@ class Cache(Elaboratable):
   def elaborate(self, platform):
     m = Module()
 
+    u_mem_rp = []
+    u_mem_wp = []
+    for idx in range(4):
+      mem = Memory(width=8, depth=2**(cfgAddrIndexBits + cfgAddrOffsetBits - 2))
+      mem_rp = mem.read_port(domain='comb')
+      mem_wp = mem.write_port()
+      u_mem_rp.append(mem_rp)
+      u_mem_wp.append(mem_wp)
+      m.submodules += [mem_rp, mem_wp]
+
     i_cpu_addr_r = Signal(32)
     cpu_addr = AddrType(self.i_cpu_addr)
     cpu_addr_r = AddrType(i_cpu_addr_r)
 
-    # XXX: Maybe this should be a Memory instead of an array.
-    mem = Array([Signal(32) for _ in range(2**(cfgAddrIndexBits + cfgAddrOffsetBits - 2))])
     tag_mem = Array([TagMemEntryType() for _ in range(2**cfgAddrIndexBits)])
     tag = tag_mem[cpu_addr.index]
     tag_r = tag_mem[cpu_addr_r.index]
@@ -71,6 +79,8 @@ class Cache(Elaboratable):
     cpu_mem_idx = Cat(cpu_addr.offset[2:], cpu_addr.index)
     bus_mem_idx = Cat(addr_cntr, cpu_addr_r.index)
 
+    u_mem_rp_data32 = Cat(u_mem_rp[0].data, u_mem_rp[1].data, u_mem_rp[2].data, u_mem_rp[3].data)
+
     with m.FSM(reset='idle') as fsm:
 
       with m.State('idle'):
@@ -78,12 +88,17 @@ class Cache(Elaboratable):
           with m.If(self.i_cpu_addr[31]):  # Cache bypass.
             m.next = 'bypass-write-0'
           with m.Elif(tag.valid & (tag.tag == cpu_addr.tag)):  # Cache HIT.
-            m.d.comb += [self.o_cpu_data.eq(mem[cpu_mem_idx]), self.o_cpu_rdy.eq(1)]
+            for idx in range(4):
+              m.d.comb += u_mem_rp[idx].addr.eq(cpu_mem_idx)
+            m.d.comb += [self.o_cpu_data.eq(u_mem_rp_data32), self.o_cpu_rdy.eq(1)]
             with m.If(self.i_cpu_we):
               m.d.sync += tag.dirty.eq(1)
               for idx in range(4):
+                m.d.comb += [
+                    u_mem_wp[idx].addr.eq(cpu_mem_idx), u_mem_wp[idx].data.eq(self.i_cpu_data[8 * idx:8 * (idx + 1)])
+                ]
                 with m.If(self.i_cpu_wsel[idx]):
-                  m.d.sync += mem[cpu_mem_idx][8 * idx:8 * idx + 8].eq(self.i_cpu_data[8 * idx:8 * idx + 8])
+                  m.d.comb += [u_mem_wp[idx].en.eq(1)]
           with m.Else():  # Cache MISS.
             m.d.sync += [i_cpu_addr_r.eq(self.i_cpu_addr), addr_cntr.eq(0)]
             with m.If(tag.valid & tag.dirty):
@@ -92,13 +107,15 @@ class Cache(Elaboratable):
               m.next = 'allocate-0'
 
       with m.State('writeback-0'):
+        for idx in range(4):
+          m.d.comb += u_mem_rp[idx].addr.eq(bus_mem_idx)
         m.d.comb += [
             self.o_wb_cyc.eq(1),
             self.o_wb_stb.eq(1),
             self.o_wb_we.eq(1),
             self.o_wb_sel.eq(0b1111),
             self.o_wb_adr.eq(Cat(Const(0, 2), addr_cntr, cpu_addr_r.index, tag_r.tag)),
-            self.o_wb_dat.eq(mem[bus_mem_idx])
+            self.o_wb_dat.eq(u_mem_rp_data32)
         ]
         with m.If(self.i_wb_ack):
           m.d.sync += [addr_cntr.eq(addr_cntr + 1)]
@@ -113,7 +130,12 @@ class Cache(Elaboratable):
             self.o_wb_adr.eq(Cat(Const(0, 2), addr_cntr, cpu_addr_r.index, cpu_addr_r.tag))
         ]
         with m.If(self.i_wb_ack):
-          m.d.sync += [mem[bus_mem_idx].eq(self.i_wb_dat), addr_cntr.eq(addr_cntr + 1)]
+          for idx in range(4):
+            m.d.comb += [
+                u_mem_wp[idx].addr.eq(bus_mem_idx), u_mem_wp[idx].data.eq(self.i_wb_dat[8 * idx:8 * (idx + 1)]),
+                u_mem_wp[idx].en.eq(1)
+            ]
+          m.d.sync += [addr_cntr.eq(addr_cntr + 1)]
           with m.If(addr_cntr == 2**(cfgAddrOffsetBits - 2) - 1):
             m.d.sync += [tag_r.tag.eq(cpu_addr_r.tag), tag_r.valid.eq(1)]
             m.next = 'idle'
