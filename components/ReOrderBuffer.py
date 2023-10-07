@@ -27,20 +27,21 @@ class ROBType(Enum):
   BRANCH2 = auto()
 
 
-class ReOrderBufferEntry(data.Struct):
-  done: unsigned(1)  # The ROB-entry is done and ready to be committed.
-  type: ROBType
-  lsqidx: unsigned(2)  # For STORE this is index into LSQ.
-  rd: unsigned(5)  # The destination register idx to commit to.
-  rdValue: unsigned(32)  # The contents to write to rd.
-  pc: unsigned(32)  # PC of the corresponding instruction.
+ReOrderBufferEntryLayout = data.StructLayout({
+    "done": unsigned(1),  # The ROB-entry is done and ready to be committed.
+    "type": ROBType,
+    "lsqidx": unsigned(2),  # For STORE this is index into LSQ.
+    "rd": unsigned(5),  # The destination register idx to commit to.
+    "rdValue": unsigned(32),  # The contents to write to rd.
+    "pc": unsigned(32)  # PC of the corresponding instruction.
+})
 
 
 class ReOrderBuffer(Elaboratable):
 
   def __init__(self):
     # Broadcast.
-    self.i_broadcast = BroadcastBusType()
+    self.i_broadcast = Signal(BroadcastBusTypeLayout)
     # Allocate.
     self.o_alloc_rdy = Signal()
     self.o_alloc_idx = Signal(3)
@@ -51,7 +52,7 @@ class ReOrderBuffer(Elaboratable):
     self.i_alloc_en = Signal()
     # Commit.
     self.o_commit_rdy = Signal()
-    self.o_commit = ReOrderBufferEntry()
+    self.o_commit = Signal(ReOrderBufferEntryLayout)
     self.o_commit_robidx = Signal(3)
     self.i_commit_en = Signal()
     # Flush.
@@ -67,7 +68,7 @@ class ReOrderBuffer(Elaboratable):
   def elaborate(self, platform):
     m = Module()
 
-    rob = Array([ReOrderBufferEntry() for _ in range(8)])
+    rob = Array([Signal(ReOrderBufferEntryLayout) for _ in range(8)])
     rp = Signal(3)
     wp = Signal(3)
     rp_ = Signal(4)

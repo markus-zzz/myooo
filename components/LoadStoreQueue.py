@@ -39,36 +39,32 @@ class LSQStatus(Enum):
   COMMITTED = auto()
 
 
-class LoadStoreQueueEntry(data.Struct):
-  type: LSQType
-
-  addr_valid: unsigned(1)
-  addr_robidx: unsigned(3)
-  addr_offset: unsigned(12)
-  addr: unsigned(32)
-
-  data_valid: unsigned(1)
-  data_robidx: unsigned(3)
-  data: unsigned(32)
-
-  size: LSQSize
-  signed: unsigned(1)
-
-  robidx: unsigned(3)
-
-  status: LSQStatus
+LoadStoreQueueEntryLayout = data.StructLayout({
+    "type": LSQType,
+    "addr_valid": unsigned(1),
+    "addr_robidx": unsigned(3),
+    "addr_offset": unsigned(12),
+    "addr": unsigned(32),
+    "data_valid": unsigned(1),
+    "data_robidx": unsigned(3),
+    "data": unsigned(32),
+    "size": LSQSize,
+    "signed": unsigned(1),
+    "robidx": unsigned(3),
+    "status": LSQStatus
+})
 
 
 class LoadStoreQueue(Elaboratable):
 
   def __init__(self):
     # Broadcast.
-    self.i_broadcast = BroadcastBusType()
-    self.o_broadcast = BroadcastBusType()
+    self.i_broadcast = Signal(BroadcastBusTypeLayout)
+    self.o_broadcast = Signal(BroadcastBusTypeLayout)
     # Allocate.
     self.o_issue_rdy = Signal()
     self.o_issue_idx = Signal(2)
-    self.i_issue = LoadStoreQueueEntry()
+    self.i_issue = Signal(LoadStoreQueueEntryLayout)
     self.i_issue_en = Signal()
     # Commit.
     self.i_commit_idx = Signal(2)
@@ -103,7 +99,7 @@ class LoadStoreQueue(Elaboratable):
         u_dcache.i_wb_ack.eq(self.i_wb_ack)
     ] # yapf: disable
 
-    lsq = Array([LoadStoreQueueEntry() for _ in range(4)])
+    lsq = Array([Signal(LoadStoreQueueEntryLayout) for _ in range(4)])
     rp = Signal(3)
     wp = Signal(3)
     empty = Signal()

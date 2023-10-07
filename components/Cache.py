@@ -18,17 +18,13 @@ cfgAddrOffsetBits = 5
 cfgAddrIndexBits = 6
 cfgAddrTagBits = 32 - cfgAddrOffsetBits - cfgAddrIndexBits
 
+AddrTypeLayout = data.StructLayout({
+    "offset": unsigned(cfgAddrOffsetBits),
+    "index": unsigned(cfgAddrIndexBits),
+    "tag": unsigned(cfgAddrTagBits)
+})
 
-class AddrType(data.Struct):
-  offset: unsigned(cfgAddrOffsetBits)
-  index: unsigned(cfgAddrIndexBits)
-  tag: unsigned(cfgAddrTagBits)
-
-
-class TagMemEntryType(data.Struct):
-  valid: unsigned(1)
-  dirty: unsigned(1)
-  tag: unsigned(cfgAddrTagBits)
+TagMemEntryTypeLayout = data.StructLayout({"valid": unsigned(1), "dirty": unsigned(1), "tag": unsigned(cfgAddrTagBits)})
 
 
 class Cache(Elaboratable):
@@ -67,10 +63,12 @@ class Cache(Elaboratable):
       m.submodules += [mem_rp, mem_wp]
 
     i_cpu_addr_r = Signal(32)
-    cpu_addr = AddrType(self.i_cpu_addr)
-    cpu_addr_r = AddrType(i_cpu_addr_r)
+    cpu_addr = Signal(AddrTypeLayout)
+    m.d.comb += cpu_addr.eq(self.i_cpu_addr)
+    cpu_addr_r = Signal(AddrTypeLayout)
+    m.d.comb += cpu_addr_r.eq(i_cpu_addr_r)
 
-    tag_mem = Array([TagMemEntryType() for _ in range(2**cfgAddrIndexBits)])
+    tag_mem = Array([Signal(TagMemEntryTypeLayout) for _ in range(2**cfgAddrIndexBits)])
     tag = tag_mem[cpu_addr.index]
     tag_r = tag_mem[cpu_addr_r.index]
 

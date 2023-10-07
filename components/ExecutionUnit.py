@@ -21,8 +21,8 @@ class ExecutionUnit(Elaboratable):
   def __init__(self):
     self.o_dispatch_rdy = Signal()
     self.i_dispatch_en = Signal()
-    self.i_dispatch_uop = MicroOperationType()
-    self.o_broadcast = BroadcastBusType()
+    self.i_dispatch_uop = Signal(MicroOperationTypeLayout)
+    self.o_broadcast = Signal(BroadcastBusTypeLayout)
     self.i_flush_en = Signal()
     self.i_halt_en = Signal()
 
@@ -31,7 +31,7 @@ class ExecutionUnit(Elaboratable):
 
     m.d.comb += self.o_dispatch_rdy.eq(~self.i_halt_en)
 
-    pipe = Array([MicroOperationType() for _ in range(4)])
+    pipe = Array([Signal(MicroOperationTypeLayout) for _ in range(4)])
     with m.If(~self.i_halt_en):
       m.d.sync += [
           pipe[0].eq(Mux(self.i_dispatch_en, self.i_dispatch_uop, 0)), pipe[1].eq(pipe[0]), pipe[2].eq(pipe[1]),

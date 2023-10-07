@@ -60,10 +60,11 @@ class uOPOpcode(Enum):
   EBREAK = auto()
 
 
-class MicroOperationType(data.Struct):
-  robidx: unsigned(3)
-  imm: unsigned(12)
-  op2: unsigned(32)
-  op1: unsigned(32)
-  opcode: uOPOpcode
-  valid: unsigned(1)
+MicroOperationTypeLayout = data.StructLayout({
+    "robidx": unsigned(3),
+    "imm": unsigned(12),
+    "op2": unsigned(32),
+    "op1": unsigned(32),
+    "opcode": uOPOpcode,
+    "valid": unsigned(1)
+})

@@ -11,58 +11,53 @@
 from amaranth import *
 from amaranth.lib import data
 
+RTypeInstrTypeLayout = data.StructLayout({
+    "opcode": unsigned(7),
+    "rd": unsigned(5),
+    "funct3": unsigned(3),
+    "rs1": unsigned(5),
+    "rs2": unsigned(5),
+    "funct7": unsigned(7)
+})
 
-class RTypeInstrType(data.Struct):
-  opcode: unsigned(7)
-  rd: unsigned(5)
-  funct3: unsigned(3)
-  rs1: unsigned(5)
-  rs2: unsigned(5)
-  funct7: unsigned(7)
+UTypeInstrTypeLayout = data.StructLayout({"opcode": unsigned(7), "rd": unsigned(5), "imm": unsigned(20)})
 
+ITypeInstrTypeLayout = data.StructLayout({
+    "opcode": unsigned(7),
+    "rd": unsigned(5),
+    "funct3": unsigned(3),
+    "rs1": unsigned(5),
+    "imm": unsigned(12)
+})
 
-class UTypeInstrType(data.Struct):
-  opcode: unsigned(7)
-  rd: unsigned(5)
-  imm: unsigned(20)
+STypeInstrTypeLayout = data.StructLayout({
+    "opcode": unsigned(7),
+    "imm_4_0": unsigned(5),
+    "funct3": unsigned(3),
+    "rs1": unsigned(5),
+    "rs2": unsigned(5),
+    "imm_11_5": unsigned(7)
+})
 
+BTypeInstrTypeLayout = data.StructLayout({
+    "opcode": unsigned(7),
+    "imm_11": unsigned(1),
+    "imm_4_1": unsigned(4),
+    "funct3": unsigned(3),
+    "rs1": unsigned(5),
+    "rs2": unsigned(5),
+    "imm_10_5": unsigned(6),
+    "imm_12": unsigned(1)
+})
 
-class ITypeInstrType(data.Struct):
-  opcode: unsigned(7)
-  rd: unsigned(5)
-  funct3: unsigned(3)
-  rs1: unsigned(5)
-  imm: unsigned(12)
-
-
-class STypeInstrType(data.Struct):
-  opcode: unsigned(7)
-  imm_4_0: unsigned(5)
-  funct3: unsigned(3)
-  rs1: unsigned(5)
-  rs2: unsigned(5)
-  imm_11_5: unsigned(7)
-
-
-class BTypeInstrType(data.Struct):
-  opcode: unsigned(7)
-  imm_11: unsigned(1)
-  imm_4_1: unsigned(4)
-  funct3: unsigned(3)
-  rs1: unsigned(5)
-  rs2: unsigned(5)
-  imm_10_5: unsigned(6)
-  imm_12: unsigned(1)
-
-
-class JTypeInstrType(data.Struct):
-  opcode: unsigned(7)
-  rd: unsigned(5)
-  imm_19_12: unsigned(8)
-  imm_11: unsigned(1)
-  imm_10_1: unsigned(10)
-  imm_20: unsigned(1)
-
+JTypeInstrTypeLayout = data.StructLayout({
+    "opcode": unsigned(7),
+    "rd": unsigned(5),
+    "imm_19_12": unsigned(8),
+    "imm_11": unsigned(1),
+    "imm_10_1": unsigned(10),
+    "imm_20": unsigned(1)
+})
 
 RV32I_OP_IMM = 0b0010011
 RV32I_OP_LUI = 0b0110111

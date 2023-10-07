@@ -27,9 +27,7 @@ def readMemInit(path, chunk_size):
 
 # Utility for generating debug signals for struct fields.
 def addDebugSignals(mod, sig, name=None):
-  for a, b in sig._AggregateMeta__layout._fields.items():
-    if name:
-      dbgSig = Signal(b.shape, name='{}${}'.format(name, a))
-    else:
-      dbgSig = Signal(b.shape, name='{}${}'.format(sig._View__value.name, a))
+  # XXX: Also structs of structs etc.
+  for a, b in sig._View__layout._fields.items():
+    dbgSig = Signal(b.shape, name='{}${}'.format(sig._View__target.name, a))
     mod.d.comb += dbgSig.eq(Value.cast(sig)[b.offset:b.offset + b.width])

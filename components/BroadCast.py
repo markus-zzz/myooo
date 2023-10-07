@@ -11,8 +11,8 @@
 from amaranth import *
 from amaranth.lib import data
 
-
-class BroadcastBusType(data.Struct):
-  valid: unsigned(1)  # Bus contents are valid.
-  robIdx: unsigned(3)  # The ROB-idx of the result.
-  data: unsigned(32)  # Bus data.
+BroadcastBusTypeLayout = data.StructLayout({
+    "valid": unsigned(1),  # Bus contents are valid.
+    "robIdx": unsigned(3),  # The ROB-idx of the result.
+    "data": unsigned(32)  # Bus data.
+})

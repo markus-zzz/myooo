@@ -13,10 +13,10 @@ from amaranth.lib import data
 
 from components.Utils import *
 
-
-class RegisterAliasTableEntry(data.Struct):
-  valid: unsigned(1)  # Entry maps to ROB not ARF.
-  robIdx: unsigned(3)  # The ROB-Idx that currently hold this register (the RAT-idx of this entry itself).
+RegisterAliasTableEntryLayout = data.StructLayout({
+    "valid": unsigned(1),  # Entry maps to ROB not ARF.
+    "robIdx": unsigned(3)  # The ROB-Idx that currently hold this register (the RAT-idx of this entry itself).
+})
 
 
 class RegisterAliasTable(Elaboratable):
@@ -44,7 +44,7 @@ class RegisterAliasTable(Elaboratable):
   def elaborate(self, platform):
     m = Module()
 
-    rat = Array([RegisterAliasTableEntry() for _ in range(32)])
+    rat = Array([Signal(RegisterAliasTableEntryLayout) for _ in range(32)])
 
     # Allocating a new translation has priority over commit (for a given index).
     with m.If(self.i_alloc_en & (self.i_alloc_idx != 0)):

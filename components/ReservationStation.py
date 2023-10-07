@@ -15,18 +15,18 @@ from components.BroadCast import *
 from components.Utils import *
 from components.MicroOperation import *
 
-
-class ReservationStationEntry(data.Struct):
-  busy: unsigned(1)  # This entry is busy.
-  opcode: uOPOpcode  # The op-code.
-  robIdx: unsigned(3)  # The ROB-idx corresponding to this RS entry.
-  rs1Value: unsigned(32)  # The value of rs1 operand if rs1ValueValid=1.
-  rs2Value: unsigned(32)  # The value of rs2 operand if rs2ValueValid=1.
-  rs1ValueValid: unsigned(1)
-  rs2ValueValid: unsigned(1)
-  rs1RobIdx: unsigned(3)  # The ROB-idx to whose result should fill rs1Value if rs1ValueValid=0.
-  rs2RobIdx: unsigned(3)  # The ROB-idx to whose result should fill rs2Value if rs2ValueValid=0.
-  imm: unsigned(12)
+ReservationStationEntryLayout = data.StructLayout({
+    "busy": unsigned(1),  # This entry is busy.
+    "opcode": uOPOpcode,  # The op-code.
+    "robIdx": unsigned(3),  # The ROB-idx corresponding to this RS entry.
+    "rs1Value": unsigned(32),  # The value of rs1 operand if rs1ValueValid=1.
+    "rs2Value": unsigned(32),  # The value of rs2 operand if rs2ValueValid=1.
+    "rs1ValueValid": unsigned(1),
+    "rs2ValueValid": unsigned(1),
+    "rs1RobIdx": unsigned(3),  # The ROB-idx to whose result should fill rs1Value if rs1ValueValid=0.
+    "rs2RobIdx": unsigned(3),  # The ROB-idx to whose result should fill rs2Value if rs2ValueValid=0.
+    "imm": unsigned(12)
+})
 
 
 class ReservationStation(Elaboratable):
@@ -34,12 +34,12 @@ class ReservationStation(Elaboratable):
   def __init__(self):
     # Ports
     self.i_issue_en = Signal()
-    self.i_issue = ReservationStationEntry()
+    self.i_issue = Signal(ReservationStationEntryLayout)
     self.o_issue_rdy = Signal()
-    self.i_broadcast = BroadcastBusType()
+    self.i_broadcast = Signal(BroadcastBusTypeLayout)
     self.i_dispatch_rdy = Signal()
     self.o_dispatch_en = Signal()
-    self.o_dispatch_uop = MicroOperationType()
+    self.o_dispatch_uop = Signal(MicroOperationTypeLayout)
     self.i_flush_en = Signal()
 
   def elaborate(self, platform):
@@ -47,7 +47,7 @@ class ReservationStation(Elaboratable):
 
     addDebugSignals(m, self.i_issue)
     addDebugSignals(m, self.o_dispatch_uop)
-    rs = Array([ReservationStationEntry() for _ in range(4)])
+    rs = Array([Signal(ReservationStationEntryLayout) for _ in range(4)])
 
     # Issue side.
     all_busy = Signal(4)

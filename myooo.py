@@ -83,7 +83,7 @@ class MyOoO(Elaboratable):
           u_icache.i_wb_ack.eq(self.i_wb_ack)
       ] # yapf: disable
 
-    broadcast = BroadcastBusType()
+    broadcast = Signal(BroadcastBusTypeLayout)
     m.d.comb += [u_rob.i_broadcast.eq(broadcast), u_rs.i_broadcast.eq(broadcast), u_lsq.i_broadcast.eq(broadcast)]
 
     flush = Signal()
@@ -102,8 +102,10 @@ class MyOoO(Elaboratable):
     #
     PC = Signal(32)
     m.d.comb += [u_icache.i_cpu_addr.eq(PC), u_icache.i_cpu_valid.eq(1)]
-    fetch_b = BTypeInstrType(u_icache.o_cpu_data)
-    fetch_j = JTypeInstrType(u_icache.o_cpu_data)
+    fetch_b = Signal(BTypeInstrTypeLayout)
+    m.d.comb += fetch_b.eq(u_icache.o_cpu_data)
+    fetch_j = Signal(JTypeInstrTypeLayout)
+    m.d.comb += fetch_j.eq(u_icache.o_cpu_data)
     with m.If(u_icache.o_cpu_rdy & u_iq.o_w_rdy & ~flush):
       m.d.comb += [u_iq.i_w_data.instr.eq(u_icache.o_cpu_data), u_iq.i_w_data.pc.eq(PC), u_iq.i_w_en.eq(1)]
       with m.Switch(fetch_b.opcode):
@@ -128,12 +130,18 @@ class MyOoO(Elaboratable):
     jalr_c = Signal(3)
 
     # Feed IQ from outside.
-    instr_r = RTypeInstrType(u_iq.o_r_data.instr)
-    instr_u = UTypeInstrType(u_iq.o_r_data.instr)
-    instr_i = ITypeInstrType(u_iq.o_r_data.instr)
-    instr_s = STypeInstrType(u_iq.o_r_data.instr)
-    instr_b = BTypeInstrType(u_iq.o_r_data.instr)
-    instr_j = JTypeInstrType(u_iq.o_r_data.instr)
+    instr_r = Signal(RTypeInstrTypeLayout)
+    m.d.comb += instr_r.eq(u_iq.o_r_data.instr)
+    instr_u = Signal(UTypeInstrTypeLayout)
+    m.d.comb += instr_u.eq(u_iq.o_r_data.instr)
+    instr_i = Signal(ITypeInstrTypeLayout)
+    m.d.comb += instr_i.eq(u_iq.o_r_data.instr)
+    instr_s = Signal(STypeInstrTypeLayout)
+    m.d.comb += instr_s.eq(u_iq.o_r_data.instr)
+    instr_b = Signal(BTypeInstrTypeLayout)
+    m.d.comb += instr_b.eq(u_iq.o_r_data.instr)
+    instr_j = Signal(JTypeInstrTypeLayout)
+    m.d.comb += instr_j.eq(u_iq.o_r_data.instr)
 
     m.d.comb += [
         u_rob.i_alloc_rd.eq(instr_r.rd),

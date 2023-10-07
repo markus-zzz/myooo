@@ -10,18 +10,10 @@ number of access ports on certain resources.
 
 ## Setup Amaranth
 
-The implementation makes heavy use of a currently unreleased Amaranth library
-for handling aggregate data structures found in [[RFC] Aggregate data structure
-library #693](https://github.com/amaranth-lang/amaranth/issues/693). The
-following instructions (slightly modified from the [official install
-guide](https://amaranth-lang.org/docs/amaranth/latest/install.html)) should set
-up a working environment
-
+Install a development snapshot of [Amaranth
+HDL](https://github.com/amaranth-lang/amaranth)
 ```
-$ git clone https://github.com/amaranth-lang/amaranth
-$ cd amaranth
-$ git checkout rfc-issue-693
-$ pip3 install --user --editable '.[builtin-yosys]'
+$ pip3 install --user 'amaranth[builtin-yosys] @ git+https://github.com/amaranth-lang/amaranth.git'
 ```
 
 ## Get RISC-V ISA tests

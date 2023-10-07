@@ -11,10 +11,10 @@
 from amaranth import *
 from amaranth.lib import data
 
-
-class InstructionQueueEntry(data.Struct):
-  instr: unsigned(32)
-  pc: unsigned(32)  # PC of the corresponding instruction.
+InstructionQueueEntryLayout = data.StructLayout({
+    "instr": unsigned(32),
+    "pc": unsigned(32)  # PC of the corresponding instruction.
+})
 
 
 class InstructionQueue(Elaboratable):
@@ -22,11 +22,11 @@ class InstructionQueue(Elaboratable):
   def __init__(self):
     # Write.
     self.o_w_rdy = Signal()
-    self.i_w_data = InstructionQueueEntry()
+    self.i_w_data = Signal(InstructionQueueEntryLayout)
     self.i_w_en = Signal()
     # Read.
     self.o_r_rdy = Signal()
-    self.o_r_data = InstructionQueueEntry()
+    self.o_r_data = Signal(InstructionQueueEntryLayout)
     self.i_r_en = Signal()
     # Flush.
     self.i_flush_en = Signal()
@@ -34,7 +34,7 @@ class InstructionQueue(Elaboratable):
   def elaborate(self, platform):
     m = Module()
 
-    iq = Array([InstructionQueueEntry() for _ in range(8)])
+    iq = Array([Signal(InstructionQueueEntryLayout) for _ in range(8)])
     rp = Signal(4)
     wp = Signal(4)
     empty = Signal()
